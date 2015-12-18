@@ -146,7 +146,7 @@ public class ExportFileService {
         
         StringBuffer mailText = null;
         StringBuffer mailInline = null;
-        List<String> attachments = new ArrayList<>();
+        List<String> attachments = new ArrayList<String>();
 
         for (File newFile : folder.listFiles()) {
             if (newFile.getName().equals(EXPORT_TEXT_FILE)) {
