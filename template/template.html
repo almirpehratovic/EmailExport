@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .header {
+            padding: 20px;
+            background-color: lightcyan;
+        }
+        label {
+            display: inline-block;
+            width: 100px;
+            font-weight: bold;
+        }
+        .body {
+            padding: 20px;
+            background-color: lightblue;
+            border-top-style: solid;
+            border-top-width: 1px;
+        }
+        
+        .attachments {
+            padding: 20px;
+            background-color: lightblue;
+            border-top-style: solid;
+            border-top-width: 1px;
+        }
+    </style>
+</head>
+<body>
+  <div class="header">
+      <label>Subject:</label> <span>${subject}</span> <br />
+      <label>From:</label> <span>${from}</span> <br />
+      <label>Date:</label> <span>${date}</span> <br />
+      <label>To:</label> <span>${to}</span> <br />
+      <label>Cc:</label> <span>${cc}</span> <br />
+      <label>Bcc:</label> <span>${bcc}</span> <br />
+      <label>Flags:</label> <span>${flags}</span> <br />
+  </div>
+  <div class="body">
+      <label>Body:</label> <br /> <br />
+      ${body}
+  </div>
+  <div class="attachments">
+      <label>Attachments:</label> <br />
+      <ul>
+        #foreach ($att in $attachments)
+            <li><a href="$att">$att</a></li>
+        #end
+      </ul>
+  </div>
+</body>
+</html>
