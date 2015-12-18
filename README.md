@@ -4,6 +4,7 @@ This is java console application for downloading email messages on a hard drive.
 
 ```java
 java -jar EmailExport.jar
+```
 
 After this command, application will asks questions about username, password, folder etc.
 
