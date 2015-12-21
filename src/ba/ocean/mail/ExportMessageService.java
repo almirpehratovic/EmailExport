@@ -10,6 +10,12 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
+import static ba.ocean.mail.ExportFileService.NamingPattern;
+import javax.mail.search.AndTerm;
+import javax.mail.search.ComparisonTerm;
+import javax.mail.search.ReceivedDateTerm;
+import javax.mail.search.SearchTerm;
+import javax.mail.search.SentDateTerm;
 
 /**
  * Main class for downloading and parsing email messages
@@ -54,10 +60,22 @@ public class ExportMessageService {
 
         serverFolder.open(Folder.READ_ONLY);
         
-        // user must choose range of email messages to download
-        configuration.askForMessagesRange(serverFolder.getName(), serverFolder.getMessageCount());
+        // user must choose which email messages to download
+        configuration.askForMessagesFilter(serverFolder.getName(), serverFolder);
+        configuration.askForNamingPattern();
         
-        Message[] messages = serverFolder.getMessages(configuration.getFirstMessage(), configuration.getLastMessage());
+        SearchTerm filter = null;
+        
+        if (serverFolder.getName().toLowerCase().contains("sent")){
+            filter = new AndTerm(new SentDateTerm(ComparisonTerm.GE, configuration.getFirstDate()),
+                                     new SentDateTerm(ComparisonTerm.LE, configuration.getLastDate()));
+        } else {
+            filter = new AndTerm(new ReceivedDateTerm(ComparisonTerm.GE, configuration.getFirstDate()),
+                                     new ReceivedDateTerm(ComparisonTerm.LE, configuration.getLastDate()));
+        }
+        
+        
+        Message[] messages = serverFolder.search(filter);
         
         // process every message in folder
         for (Message message : messages) {
@@ -65,7 +83,7 @@ public class ExportMessageService {
             
             File newFolder = null;
             try {
-                newFolder = fileService.createMessageFolder(message);
+                newFolder = fileService.createMessageFolder(configuration.getActiveProfile(), message, configuration.getNamingPattern());
             } catch (IOException e){
                 System.out.println("Skipping message because: " + e.getMessage());
                 continue;

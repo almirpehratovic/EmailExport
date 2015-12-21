@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Properties;
 import javax.mail.Address;
 import javax.mail.Flags;
+import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -43,7 +44,9 @@ public class ExportFileService {
     public static final String TEMPLATE_FOLDER = "template";
     public static final String PROFILE_FOLDER = "profiles";
     public static final String NEW_LINE = "<br />";
-
+    
+    public static enum NamingPattern {RECEIVEDDATE_RECEIVER_SUBJECT, SENTDATE_SENDER_SUBJECT};
+    
     public static final File outputFolder = new File(EXPORT_FOLDER);
 
     public ExportFileService() throws IOException {
@@ -60,20 +63,47 @@ public class ExportFileService {
      * @throws IOException
      * @throws MessagingException 
      */
-    public File createMessageFolder(Message message) throws IOException, MessagingException {
-        // create name of the folder
-        String name = message.getFolder().getName() + "_" + getAppropriateDate(message.getReceivedDate(), message.getSentDate(), "yyyyMMddHHmmss") + "_" 
-                + addressToString(message.getFrom()) + "_" + message.getSubject();
+    public File createMessageFolder(ExportServerProfile profile, Message message, NamingPattern namingPattern) throws IOException, MessagingException {
+        // create folder for server folder name, for example inbox
+        File folder = new File(outputFolder, profile.getName().replace(" ",""));
+        
+        if (!folder.exists()){
+            Files.createDirectory(folder.toPath());
+        }
+        
+        folder = new File(folder, message.getFolder().getName().replace(" ",""));
+        
+        if (!folder.exists()){
+            Files.createDirectory(folder.toPath());
+        }
+        
+        // create name of the folder according to naming rules
+        String name = null;
+        
+        switch(namingPattern){
+            case RECEIVEDDATE_RECEIVER_SUBJECT:
+                name = getAppropriateDate(message.getReceivedDate(), null, "yyyyMMddHHmmss") + "_" 
+                            + addressToString(message.getFrom()) + "_" + message.getSubject();
+                break;
+            case SENTDATE_SENDER_SUBJECT:
+                name = getAppropriateDate(message.getSentDate(), null, "yyyyMMddHHmmss") + "_" 
+                            + addressToString(message.getRecipients(Message.RecipientType.TO)) + "_" + message.getSubject();
+                break;
+            default:
+                name = message.getSubject();
+                break;
+        } 
+        
         name = name.replace(" ", "");
         name = name.substring(0, name.length() > 200 ? 200 : name.length());
         
-        File newFolder = new File(outputFolder, name);
-        if (newFolder.exists()) {
+        File messageFolder = new File(folder, name);
+        if (messageFolder.exists()) {
             throw new IOException("Folder with name " + name + " already exists.");
         } else {
-            Files.createDirectory(newFolder.toPath());
+            Files.createDirectory(messageFolder.toPath());
         }
-        return newFolder;
+        return messageFolder;
     }
     
     /**
@@ -146,7 +176,7 @@ public class ExportFileService {
         
         StringBuffer mailText = null;
         StringBuffer mailInline = null;
-        List<String> attachments = new ArrayList<String>();
+        List<String> attachments = new ArrayList<>();
 
         for (File newFile : folder.listFiles()) {
             if (newFile.getName().equals(EXPORT_TEXT_FILE)) {

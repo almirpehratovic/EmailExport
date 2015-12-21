@@ -12,13 +12,14 @@ After this command, application will asks questions about username, password, fo
 
 * Configuring email servers as profiles in .properties files
 * Reading list of folders on server (inbox, sent, ...)
-* For downloading email messages from Gmail security needs to be adjusted temporarily (see [link](https://www.google.com/settings/security/lesssecureapps))
+* For downloading email messages from Gmail security needs to be adjusted temporarily (Turn on on this [link](https://www.google.com/settings/security/lesssecureapps))
 * Every message is downloaded as a folder which contains main message file and all attachments
 * Output file for email message is velocity template (html)
+* User can choose between two different naming patterns
+* Messages are downloading for the range of dates
 
 ## List of features that are currently missing
 
-* User should be able to choose format of output filename
 * User should be able to filter email messages (for example, by receiving date, sender, receiver, subject etc.)
 * Application should enable downloading only new messages
 * Oauth2 authentication for convenient Gmail connection
