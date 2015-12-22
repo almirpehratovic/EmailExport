@@ -118,14 +118,14 @@ public class ExportMessageService {
      * @throws IOException 
      */
     private void processMessagePart(Part part, File folder) throws MessagingException, IOException {
-        String attachmentFilename = part.getFileName();
+        String attachmentFilename = fileService.cleanFilename(part.getFileName());
         String disposition = part.getDisposition();
         String contentType = part.getContentType();
         
         if (contentType.toLowerCase().startsWith("multipart/")) {
             processMessageMultipart((Multipart) part.getContent(), folder);
         } else if (attachmentFilename == null && (Part.ATTACHMENT.equalsIgnoreCase(disposition) || !contentType.equalsIgnoreCase("text/plain"))) {
-            attachmentFilename = File.createTempFile("attachment", ".html").getName();
+            attachmentFilename = fileService.cleanFilename(File.createTempFile("attachment", ".html").getName());
         }
 
         if (attachmentFilename == null) {

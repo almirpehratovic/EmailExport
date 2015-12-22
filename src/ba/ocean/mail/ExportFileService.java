@@ -40,12 +40,11 @@ public class ExportFileService {
     public static final String EXPORT_INLINE_FILE = "body_inline.txt";
     public static final String EXPORT_TEXT_FILE = "body_text.txt";
     public static final String EXPORT_MESSAGE_FILE = "message.html";
-    
+
     public static final String TEMPLATE_FOLDER = "template";
     public static final String PROFILE_FOLDER = "profiles";
     public static final String NEW_LINE = "<br />";
-    
-    
+
     public static final File outputFolder = new File(EXPORT_FOLDER);
 
     public ExportFileService() throws IOException {
@@ -56,52 +55,56 @@ public class ExportFileService {
     }
 
     /**
-     * Creates folder for one email message. Name of the folder should depend of user choices
+     * Creates folder for one email message. Name of the folder should depend of
+     * user choices
+     *
      * @param message Email message
      * @return created folder
      * @throws IOException
-     * @throws MessagingException 
+     * @throws MessagingException
      */
     public File createMessageFolder(ExportServerProfile profile, Message message, String namingPattern) throws IOException, MessagingException {
         // create folder for server folder name, for example inbox
         File folder = new File(outputFolder, cleanFilename(profile.getName()));
-        
-        if (!folder.exists()){
+
+        if (!folder.exists()) {
             folder.mkdir();
         }
-        
+
         folder = new File(folder, cleanFilename(message.getFolder().getName()));
-        
-        if (!folder.exists()){
+
+        if (!folder.exists()) {
             folder.mkdir();
         }
-        
+
         // create name of the folder according to naming rules
-        String name = createNameFromPattern(message,namingPattern);
-        
-        if (name == null || name.length() == 0)
+        String name = createNameFromPattern(message, namingPattern);
+
+        if (name == null || name.length() == 0) {
             name = "Message " + message.getMessageNumber();
-        
+        }
+
         name = cleanFilename(name.substring(0, name.length() > 200 ? 200 : name.length()));
-        
+
         File messageFolder = new File(folder, name);
         if (messageFolder.exists()) {
             throw new IOException("Folder with name " + name + " already exists.");
         } else {
-             if (!messageFolder.mkdir()){
-                 System.out.println("Couldn't create folder " + messageFolder);
-             }
+            if (!messageFolder.mkdir()) {
+                System.out.println("Couldn't create folder " + messageFolder);
+            }
         }
         return messageFolder;
     }
-    
+
     /**
      * Creates email attachment file
+     *
      * @param in InputStream of attachment
      * @param folder Folder in which attachment will be created
      * @param filename Filename of the attachment
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     public File createAttachment(InputStream in, File folder, String filename) throws IOException {
         filename = filename.replace(" ", "");
@@ -119,15 +122,16 @@ public class ExportFileService {
 
         return file;
     }
-    
+
     /**
      * Create attachment file for message inline
+     *
      * @param part Message part
      * @param folder Folder in which attachment will be created
      * @param filename Filename of the attachment
      * @return
      * @throws IOException
-     * @throws MessagingException 
+     * @throws MessagingException
      */
     public File createInlineAttachment(Part part, File folder, String filename) throws IOException, MessagingException {
         File file = new File(folder, cleanFilename(filename));
@@ -138,14 +142,15 @@ public class ExportFileService {
 
         return file;
     }
-    
+
     /**
      * Creates HTML file which contains details of the message, using Velocity
+     *
      * @param message Message
      * @param folder Folder in which attachment will be created
      * @return created file
      * @throws MessagingException
-     * @throws IOException 
+     * @throws IOException
      */
     public File createMessageFileFromTemplate(Message message, File folder) throws MessagingException, IOException {
         VelocityEngine velocityEngine = new VelocityEngine();
@@ -160,9 +165,9 @@ public class ExportFileService {
         ctx.put("bcc", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.BCC)));
         ctx.put("cc", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.CC)));
         ctx.put("flags", getFlags(message.getFlags()));
-        
+
         ctx.put("date", getAppropriateDate(message.getReceivedDate(), message.getSentDate(), "MM/dd/yyyy HH:mm:ss"));
-        
+
         StringBuffer mailText = null;
         StringBuffer mailInline = null;
         List<String> attachments = new ArrayList<>();
@@ -189,62 +194,64 @@ public class ExportFileService {
         if (attachments.size() > 0) {
             ctx.put("attachments", attachments);
         }
-        
+
         FileWriter fileWriter = new FileWriter(new File(folder, EXPORT_MESSAGE_FILE));
         velocityTemplate.merge(ctx, fileWriter);
         fileWriter.flush();
         fileWriter.flush();
-        
+
         return null;
     }
-    
+
     /**
      * Reads email flags and returns them as a string
+     *
      * @param flags Flags object from Message
      * @return flags as a string
      */
     private String getFlags(Flags flags) {
         StringBuffer buffer = new StringBuffer();
-        
-        if (flags.contains(Flags.Flag.ANSWERED)){
+
+        if (flags.contains(Flags.Flag.ANSWERED)) {
             buffer.append("ANSWERED ");
         }
-        if (flags.contains(Flags.Flag.DELETED)){
+        if (flags.contains(Flags.Flag.DELETED)) {
             buffer.append("DELETED ");
         }
-        if (flags.contains(Flags.Flag.DRAFT)){
+        if (flags.contains(Flags.Flag.DRAFT)) {
             buffer.append("DRAFT ");
         }
-        if (flags.contains(Flags.Flag.FLAGGED)){
+        if (flags.contains(Flags.Flag.FLAGGED)) {
             buffer.append("FLAGGED ");
         }
-        if (flags.contains(Flags.Flag.RECENT)){
+        if (flags.contains(Flags.Flag.RECENT)) {
             buffer.append("RECENT ");
         }
-        if (flags.contains(Flags.Flag.SEEN)){
+        if (flags.contains(Flags.Flag.SEEN)) {
             buffer.append("SEEN ");
         }
-        if (flags.contains(Flags.Flag.USER)){
+        if (flags.contains(Flags.Flag.USER)) {
             buffer.append("USER ");
         }
-        
-        for (String flag : flags.getUserFlags()){
+
+        for (String flag : flags.getUserFlags()) {
             buffer.append(flag + " ");
         }
-        
+
         return buffer.toString();
     }
-    
+
     /**
      * Reads profiles from .properties files
+     *
      * @return list of ExportServerProfile objects
      */
-    public List<ExportServerProfile> readProfiles(){
+    public List<ExportServerProfile> readProfiles() {
         File folder = new File(PROFILE_FOLDER);
         List<ExportServerProfile> profiles = new ArrayList<>();
-        
-        for (File file : folder.listFiles()){
-            if (file.getName().contains(".properties")){
+
+        for (File file : folder.listFiles()) {
+            if (file.getName().contains(".properties")) {
                 Properties props = new Properties();
                 try {
                     InputStream fis = new FileInputStream(file);
@@ -257,45 +264,45 @@ public class ExportFileService {
                 }
             }
         }
-        
+
         return profiles;
     }
-    
+
     /**
      * Reads profiles from .properties files
+     *
      * @return all configured patterns
      */
-    public Properties readNamingPatterns(){
+    public Properties readNamingPatterns() {
         File folder = new File(TEMPLATE_FOLDER);
-        
+
         File file = new File(folder, "naming.properties");
-        
+
         Properties props = new Properties();
-        
-        if (!file.exists()){
-            props.put("1","{sender}_{receiver}_{subject}");
+
+        if (!file.exists()) {
+            props.put("1", "{sender}_{receiver}_{subject}");
         } else {
-            
+
             try {
-                    InputStream fis = new FileInputStream(file);
-                    props.load(fis);
-                    fis.close();
+                InputStream fis = new FileInputStream(file);
+                props.load(fis);
+                fis.close();
             } catch (IOException ex) {
-                    System.out.println("Error while loading " + file.getAbsolutePath());
-                    ex.printStackTrace();
+                System.out.println("Error while loading " + file.getAbsolutePath());
+                ex.printStackTrace();
             }
         }
-        
+
         return props;
     }
-    
-    
-    
+
     /**
      * Helper method for reading file (body of message)
+     *
      * @param file File to read
      * @return Text from the file
-     * @throws IOException 
+     * @throws IOException
      */
     private static StringBuffer readTextFromFile(File file) throws IOException {
         StringBuffer buffer = new StringBuffer();
@@ -309,66 +316,64 @@ public class ExportFileService {
         }
         return buffer;
     }
-    
 
-    
-    private String getAppropriateDate(Date receivedDate, Date sentDate, String pattern){
+    private String getAppropriateDate(Date receivedDate, Date sentDate, String pattern) {
         DateFormat format = new SimpleDateFormat(pattern);
-        if (receivedDate != null){
+        if (receivedDate != null) {
             return format.format(receivedDate);
-        } else if (sentDate != null){
+        } else if (sentDate != null) {
             return format.format(sentDate);
         }
         return null;
     }
-    
-    
+
     /**
      * Create file name from chosen naming pattern
+     *
      * @param message Email message
      * @param namingPattern naming pattern
-     * @return 
+     * @return
      */
     private String createNameFromPattern(Message message, String namingPattern) throws MessagingException {
         String name = namingPattern;
-        
+
         name = name.replace("{rDateYear}", ExportUtils.convertDate(message.getReceivedDate(), "yyyy"));
         name = name.replace("{rDateMonth}", ExportUtils.convertDate(message.getReceivedDate(), "MM"));
         name = name.replace("{rDateDay}", ExportUtils.convertDate(message.getReceivedDate(), "dd"));
         name = name.replace("{rDateHour}", ExportUtils.convertDate(message.getReceivedDate(), "HH"));
         name = name.replace("{rDateMinute}", ExportUtils.convertDate(message.getReceivedDate(), "mm"));
         name = name.replace("{rDateSecond}", ExportUtils.convertDate(message.getReceivedDate(), "ss"));
-        
+
         name = name.replace("{sDateYear}", ExportUtils.convertDate(message.getSentDate(), "yyyy"));
         name = name.replace("{sDateMonth}", ExportUtils.convertDate(message.getSentDate(), "MM"));
         name = name.replace("{sDateDay}", ExportUtils.convertDate(message.getSentDate(), "dd"));
         name = name.replace("{sDateHour}", ExportUtils.convertDate(message.getSentDate(), "HH"));
         name = name.replace("{sDateMinute}", ExportUtils.convertDate(message.getSentDate(), "mm"));
         name = name.replace("{sDateSecond}", ExportUtils.convertDate(message.getSentDate(), "ss"));
-        
+
         name = name.replace("{from}", ExportUtils.addressToString(message.getFrom()));
         name = name.replace("{to}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.TO)));
         name = name.replace("{cc}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.CC)));
         name = name.replace("{bcc}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.BCC)));
-        
+
         name = name.replace("{subject}", message.getSubject() == null ? "" : message.getSubject());
-        
-        
-        
+
         return name;
     }
-    
+
     /**
      * Cleans odd and unallowed characters from filename
+     *
      * @param filename
-     * @return 
+     * @return
      */
-    private String cleanFilename(String filename){
-        String name = filename;
-        name = name.replaceAll("[#%&{}<>*?$!'\":`|]", "");
-        name = name.replace("\\", "");
-        name = name.replace("/", "");
-        return name;
+    public String cleanFilename(String filename) {
+        if (filename != null) {
+            String name = filename;
+            name = name.replaceAll("[^a-zA-Z0-9.@:_\\s-]", "");
+            return name;
+        }
+        return null;
     }
 
 }
