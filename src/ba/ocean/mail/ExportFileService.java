@@ -64,16 +64,16 @@ public class ExportFileService {
      */
     public File createMessageFolder(ExportServerProfile profile, Message message, String namingPattern) throws IOException, MessagingException {
         // create folder for server folder name, for example inbox
-        File folder = new File(outputFolder, profile.getName().replace(" ",""));
+        File folder = new File(outputFolder, cleanFilename(profile.getName()));
         
         if (!folder.exists()){
-            Files.createDirectory(folder.toPath());
+            folder.mkdir();
         }
         
-        folder = new File(folder, message.getFolder().getName().replace(" ",""));
+        folder = new File(folder, cleanFilename(message.getFolder().getName()));
         
         if (!folder.exists()){
-            Files.createDirectory(folder.toPath());
+            folder.mkdir();
         }
         
         // create name of the folder according to naming rules
@@ -82,14 +82,15 @@ public class ExportFileService {
         if (name == null || name.length() == 0)
             name = "Message " + message.getMessageNumber();
         
-        name = name.substring(0, name.length() > 200 ? 200 : name.length());
+        name = cleanFilename(name.substring(0, name.length() > 200 ? 200 : name.length()));
         
         File messageFolder = new File(folder, name);
         if (messageFolder.exists()) {
             throw new IOException("Folder with name " + name + " already exists.");
         } else {
-            messageFolder.mkdir();
-            //Files.createDirectory(messageFolder.toPath());
+             if (!messageFolder.mkdir()){
+                 System.out.println("Couldn't create folder " + messageFolder);
+             }
         }
         return messageFolder;
     }
@@ -104,7 +105,7 @@ public class ExportFileService {
      */
     public File createAttachment(InputStream in, File folder, String filename) throws IOException {
         filename = filename.replace(" ", "");
-        File file = new File(folder, filename);
+        File file = new File(folder, cleanFilename(filename));
         OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
 
         int b;
@@ -129,7 +130,7 @@ public class ExportFileService {
      * @throws MessagingException 
      */
     public File createInlineAttachment(Part part, File folder, String filename) throws IOException, MessagingException {
-        File file = new File(folder, filename);
+        File file = new File(folder, cleanFilename(filename));
         OutputStream out = new FileOutputStream(file);
         part.writeTo(out);
         out.flush();
@@ -352,6 +353,21 @@ public class ExportFileService {
         
         name = name.replace("{subject}", message.getSubject() == null ? "" : message.getSubject());
         
+        
+        
+        return name;
+    }
+    
+    /**
+     * Cleans odd and unallowed characters from filename
+     * @param filename
+     * @return 
+     */
+    private String cleanFilename(String filename){
+        String name = filename;
+        name = name.replaceAll("[#%&{}<>*?$!'\":`|]", "");
+        name = name.replace("\\", "");
+        name = name.replace("/", "");
         return name;
     }
 
