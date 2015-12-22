@@ -79,6 +79,9 @@ public class ExportFileService {
         // create name of the folder according to naming rules
         String name = createNameFromPattern(message,namingPattern);
         
+        if (name == null || name.length() == 0)
+            name = "Message " + message.getMessageNumber();
+        
         name = name.substring(0, name.length() > 200 ? 200 : name.length());
         
         File messageFolder = new File(folder, name);
