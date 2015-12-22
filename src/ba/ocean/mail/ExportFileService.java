@@ -354,7 +354,8 @@ public class ExportFileService {
         name = name.replace("{to}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.TO)));
         name = name.replace("{cc}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.CC)));
         name = name.replace("{bcc}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.BCC)));
-        name = name.replace("{subject}", message.getSubject());
+        
+        name = name.replace("{subject}", message.getSubject() == null ? "" : message.getSubject());
         
         return name;
     }

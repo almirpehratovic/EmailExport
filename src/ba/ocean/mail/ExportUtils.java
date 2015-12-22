@@ -50,6 +50,9 @@ public class ExportUtils {
     }
 
     public static String addressToString(Address[] address) {
+        if (address == null){
+            return "";
+        }
         StringBuffer buffer = new StringBuffer();
         if (address != null) {
             for (Address a : address) {
