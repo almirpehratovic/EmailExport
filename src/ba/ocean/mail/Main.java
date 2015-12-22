@@ -14,7 +14,7 @@ public class Main {
         
         try {
             ExportFileService fileService = new ExportFileService();
-            ExportConfiguration config = new ExportConfiguration(fileService.readProfiles());
+            ExportConfiguration config = new ExportConfiguration(fileService.readProfiles(), fileService.readNamingPatterns());
             ExportMessageService messageService = new ExportMessageService(fileService, config);
 
             messageService.downloadMessages();

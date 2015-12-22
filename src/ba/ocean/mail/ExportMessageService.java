@@ -10,7 +10,6 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
-import static ba.ocean.mail.ExportFileService.NamingPattern;
 import javax.mail.search.AndTerm;
 import javax.mail.search.ComparisonTerm;
 import javax.mail.search.ReceivedDateTerm;
@@ -83,7 +82,7 @@ public class ExportMessageService {
             
             File newFolder = null;
             try {
-                newFolder = fileService.createMessageFolder(configuration.getActiveProfile(), message, configuration.getNamingPattern());
+                newFolder = fileService.createMessageFolder(configuration.getActiveProfile(), message, configuration.getActiveNamingPattern());
             } catch (IOException e){
                 System.out.println("Skipping message because: " + e.getMessage());
                 continue;

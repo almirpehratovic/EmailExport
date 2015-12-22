@@ -15,7 +15,7 @@ After this command, application will asks questions about username, password, fo
 * For downloading email messages from Gmail security needs to be adjusted temporarily (Turn on on this [link](https://www.google.com/settings/security/lesssecureapps))
 * Every message is downloaded as a folder which contains main message file and all attachments
 * Output file for email message is velocity template (html)
-* User can choose between two different naming patterns
+* User can configure naming patterns in naming.properties
 * Messages are downloading for the range of dates
 
 ## List of features that are currently missing

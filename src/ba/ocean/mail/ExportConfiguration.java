@@ -5,7 +5,6 @@ import java.util.List;
 import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.Store;
-import static ba.ocean.mail.ExportFileService.NamingPattern;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,11 +25,14 @@ public class ExportConfiguration {
     private ExportServerProfile activeProfile;
     // chosen folder
     private Folder folder;
+    // all naming patterns for this app
+    private List<String> namingPatterns = new ArrayList<String>();
     // chosen naming pattern
-    private NamingPattern namingPattern;
+    private String activeNamingPattern;
 
-    public ExportConfiguration(List<ExportServerProfile> profiles) {
+    public ExportConfiguration(List<ExportServerProfile> profiles, List<String> namingPatterns) {
         this.profiles = profiles;
+        this.namingPatterns = namingPatterns;
     }
 
     public Date getFirstDate() {
@@ -74,13 +76,15 @@ public class ExportConfiguration {
     public void setFolder(Folder folder) {
         this.folder = folder;
     }
+    
+    
 
-    public NamingPattern getNamingPattern() {
-        return namingPattern;
+    public String getActiveNamingPattern() {
+        return activeNamingPattern;
     }
 
-    public void setNamingPattern(NamingPattern namingPattern) {
-        this.namingPattern = namingPattern;
+    public void setActiveNamingPattern(String namingPattern) {
+        this.activeNamingPattern = namingPattern;
     }
     
     
@@ -98,7 +102,7 @@ public class ExportConfiguration {
         do {
             System.out.println("Your selection: ");
             line = System.console().readLine();
-            num = convertString(line);
+            num = ExportUtils.convertString(line);
         } while (num == -1 || num == 0 || num > i);
         setActiveProfile(profiles.get(num-1));
     }
@@ -122,39 +126,19 @@ public class ExportConfiguration {
         do {
             System.out.println("Please enter first date (" + datePattern + ") to download:");
             line = System.console().readLine();
-            date = convertString(line, datePattern);
+            date = ExportUtils.convertString(line, datePattern);
         } while (date == null);
         setFirstDate(date);
         
         do {
             System.out.println("Please enter last date (" + datePattern + ") to download:");
             line = System.console().readLine();
-            date = convertString(line, datePattern);
+            date = ExportUtils.convertString(line, datePattern);
         } while (date == null || date.compareTo(this.firstDate) < 0);
         setLastDate(date);
 
     }
     
-    private Date convertString(String str, String pattern){
-        DateFormat format = new SimpleDateFormat(pattern);
-        Date date = null;
-        try {
-            date = format.parse(str);
-        } catch (ParseException e){
-            System.out.println(e.getMessage());
-        }
-        return date;
-    }
-    
-    private int convertString(String str){
-        int num = -1;
-        try {
-            num = Integer.parseInt(str);
-        } catch (NumberFormatException e){
-            
-        }
-        return num;
-    }
 
     public void askForFolder(Store store) throws MessagingException {
         String line = null; int num = -1;
@@ -169,7 +153,7 @@ public class ExportConfiguration {
         do {
             System.out.println("Your selection: ");
             line = System.console().readLine();
-            num = convertString(line);
+            num = ExportUtils.convertString(line);
         } while (num == -1 || num == 0 || num > i);
         setFolder(folders.get(num-1));
     }
@@ -177,19 +161,17 @@ public class ExportConfiguration {
     public void askForNamingPattern() {
         String line = null; int num = -1;
         int i = 0;
-        System.out.println("Choose naming pattern:");
-        List<String> patterns = new ArrayList<>();
-        for (NamingPattern p : NamingPattern.values()){
+        System.out.println("Choose naming pattern (from naming.properties file):");
+        for (String p : this.namingPatterns){
             i++;
-            patterns.add(p.name());
-            System.out.println("[" + i + "] " + p.name());
+            System.out.println("[" + i + "] " + p);
         }
         do {
             System.out.println("Your selection: ");
             line = System.console().readLine();
-            num = convertString(line);
+            num = ExportUtils.convertString(line);
         } while (num == -1 || num == 0 || num > i);
-        setNamingPattern(NamingPattern.valueOf(patterns.get(num-1)));
+        setActiveNamingPattern(this.namingPatterns.get(num-1));
     }
     
     

@@ -45,7 +45,6 @@ public class ExportFileService {
     public static final String PROFILE_FOLDER = "profiles";
     public static final String NEW_LINE = "<br />";
     
-    public static enum NamingPattern {RECEIVEDDATE_RECEIVER_SUBJECT, SENTDATE_SENDER_SUBJECT};
     
     public static final File outputFolder = new File(EXPORT_FOLDER);
 
@@ -63,7 +62,7 @@ public class ExportFileService {
      * @throws IOException
      * @throws MessagingException 
      */
-    public File createMessageFolder(ExportServerProfile profile, Message message, NamingPattern namingPattern) throws IOException, MessagingException {
+    public File createMessageFolder(ExportServerProfile profile, Message message, String namingPattern) throws IOException, MessagingException {
         // create folder for server folder name, for example inbox
         File folder = new File(outputFolder, profile.getName().replace(" ",""));
         
@@ -78,30 +77,16 @@ public class ExportFileService {
         }
         
         // create name of the folder according to naming rules
-        String name = null;
+        String name = createNameFromPattern(message,namingPattern);
         
-        switch(namingPattern){
-            case RECEIVEDDATE_RECEIVER_SUBJECT:
-                name = getAppropriateDate(message.getReceivedDate(), null, "yyyyMMddHHmmss") + "_" 
-                            + addressToString(message.getFrom()) + "_" + message.getSubject();
-                break;
-            case SENTDATE_SENDER_SUBJECT:
-                name = getAppropriateDate(message.getSentDate(), null, "yyyyMMddHHmmss") + "_" 
-                            + addressToString(message.getRecipients(Message.RecipientType.TO)) + "_" + message.getSubject();
-                break;
-            default:
-                name = message.getSubject();
-                break;
-        } 
-        
-        name = name.replace(" ", "");
         name = name.substring(0, name.length() > 200 ? 200 : name.length());
         
         File messageFolder = new File(folder, name);
         if (messageFolder.exists()) {
             throw new IOException("Folder with name " + name + " already exists.");
         } else {
-            Files.createDirectory(messageFolder.toPath());
+            messageFolder.mkdir();
+            //Files.createDirectory(messageFolder.toPath());
         }
         return messageFolder;
     }
@@ -166,10 +151,10 @@ public class ExportFileService {
 
         VelocityContext ctx = new VelocityContext();
         ctx.put("subject", message.getSubject());
-        ctx.put("from", addressToString(message.getFrom()));
-        ctx.put("to", addressToString(message.getRecipients(Message.RecipientType.TO)));
-        ctx.put("bcc", addressToString(message.getRecipients(Message.RecipientType.BCC)));
-        ctx.put("cc", addressToString(message.getRecipients(Message.RecipientType.CC)));
+        ctx.put("from", ExportUtils.addressToString(message.getFrom()));
+        ctx.put("to", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.TO)));
+        ctx.put("bcc", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.BCC)));
+        ctx.put("cc", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.CC)));
         ctx.put("flags", getFlags(message.getFlags()));
         
         ctx.put("date", getAppropriateDate(message.getReceivedDate(), message.getSentDate(), "MM/dd/yyyy HH:mm:ss"));
@@ -273,6 +258,41 @@ public class ExportFileService {
     }
     
     /**
+     * Reads profiles from .properties files
+     * @return list of ExportServerProfile objects
+     */
+    public List<String> readNamingPatterns(){
+        File folder = new File(TEMPLATE_FOLDER);
+        List<String> patterns = new ArrayList<>();
+        
+        File file = new File(folder, "naming.properties");
+        
+        if (!file.exists()){
+            patterns.add("{sender}_{receiver}_{subject}");
+        } else {
+            Properties props = new Properties();
+            try {
+                    InputStream fis = new FileInputStream(file);
+                    props.load(fis);
+                    fis.close();
+                    for (Object key : props.keySet()){
+                        String skey = (String)key;
+                        if (skey.startsWith("pattern.")){
+                            patterns.add(props.getProperty(skey));
+                        }
+                    }
+                } catch (IOException ex) {
+                    System.out.println("Error while loading " + file.getAbsolutePath());
+                    ex.printStackTrace();
+                }
+        }
+        
+        return patterns;
+    }
+    
+    
+    
+    /**
      * Helper method for reading file (body of message)
      * @param file File to read
      * @return Text from the file
@@ -291,15 +311,7 @@ public class ExportFileService {
         return buffer;
     }
     
-    private String addressToString(Address[] address){
-        StringBuffer buffer = new StringBuffer();
-        if (address != null){
-            for (Address a : address){
-                buffer.append(((InternetAddress) a).getAddress() + " ");
-            }
-        }
-        return buffer.toString();
-    }
+
     
     private String getAppropriateDate(Date receivedDate, Date sentDate, String pattern){
         DateFormat format = new SimpleDateFormat(pattern);
@@ -309,6 +321,39 @@ public class ExportFileService {
             return format.format(sentDate);
         }
         return null;
+    }
+    
+    
+    /**
+     * Create file name from chosen naming pattern
+     * @param message Email message
+     * @param namingPattern naming pattern
+     * @return 
+     */
+    private String createNameFromPattern(Message message, String namingPattern) throws MessagingException {
+        String name = namingPattern;
+        
+        name = name.replace("{rDateYear}", ExportUtils.convertDate(message.getReceivedDate(), "yyyy"));
+        name = name.replace("{rDateMonth}", ExportUtils.convertDate(message.getReceivedDate(), "MM"));
+        name = name.replace("{rDateDay}", ExportUtils.convertDate(message.getReceivedDate(), "dd"));
+        name = name.replace("{rDateHour}", ExportUtils.convertDate(message.getReceivedDate(), "HH"));
+        name = name.replace("{rDateMinute}", ExportUtils.convertDate(message.getReceivedDate(), "mm"));
+        name = name.replace("{rDateSecond}", ExportUtils.convertDate(message.getReceivedDate(), "ss"));
+        
+        name = name.replace("{sDateYear}", ExportUtils.convertDate(message.getSentDate(), "yyyy"));
+        name = name.replace("{sDateMonth}", ExportUtils.convertDate(message.getSentDate(), "MM"));
+        name = name.replace("{sDateDay}", ExportUtils.convertDate(message.getSentDate(), "dd"));
+        name = name.replace("{sDateHour}", ExportUtils.convertDate(message.getSentDate(), "HH"));
+        name = name.replace("{sDateMinute}", ExportUtils.convertDate(message.getSentDate(), "mm"));
+        name = name.replace("{sDateSecond}", ExportUtils.convertDate(message.getSentDate(), "ss"));
+        
+        name = name.replace("{from}", ExportUtils.addressToString(message.getFrom()));
+        name = name.replace("{to}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.TO)));
+        name = name.replace("{cc}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.CC)));
+        name = name.replace("{bcc}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.BCC)));
+        name = name.replace("{subject}", message.getSubject());
+        
+        return name;
     }
 
 }
