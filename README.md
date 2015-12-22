@@ -6,7 +6,7 @@ This is java console application for downloading email messages on a hard drive.
 java -jar EmailExport.jar
 ```
 
-After this command, application will asks questions about username, password, folder etc.
+After this command, application will asks questions about username, password, folder etc. If you want to configure naming patterns of downloaded messages, please see template/naming.properties file.
 
 ## List of implemented features
 
