@@ -262,35 +262,30 @@ public class ExportFileService {
     
     /**
      * Reads profiles from .properties files
-     * @return list of ExportServerProfile objects
+     * @return all configured patterns
      */
-    public List<String> readNamingPatterns(){
+    public Properties readNamingPatterns(){
         File folder = new File(TEMPLATE_FOLDER);
-        List<String> patterns = new ArrayList<>();
         
         File file = new File(folder, "naming.properties");
         
+        Properties props = new Properties();
+        
         if (!file.exists()){
-            patterns.add("{sender}_{receiver}_{subject}");
+            props.put("1","{sender}_{receiver}_{subject}");
         } else {
-            Properties props = new Properties();
+            
             try {
                     InputStream fis = new FileInputStream(file);
                     props.load(fis);
                     fis.close();
-                    for (Object key : props.keySet()){
-                        String skey = (String)key;
-                        if (skey.startsWith("pattern.")){
-                            patterns.add(props.getProperty(skey));
-                        }
-                    }
-                } catch (IOException ex) {
+            } catch (IOException ex) {
                     System.out.println("Error while loading " + file.getAbsolutePath());
                     ex.printStackTrace();
-                }
+            }
         }
         
-        return patterns;
+        return props;
     }
     
     

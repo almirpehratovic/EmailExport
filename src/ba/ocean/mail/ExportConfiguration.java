@@ -8,7 +8,10 @@ import javax.mail.Store;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * Application configuration
@@ -26,11 +29,11 @@ public class ExportConfiguration {
     // chosen folder
     private Folder folder;
     // all naming patterns for this app
-    private List<String> namingPatterns = new ArrayList<String>();
+    private Properties namingPatterns = new Properties();
     // chosen naming pattern
     private String activeNamingPattern;
 
-    public ExportConfiguration(List<ExportServerProfile> profiles, List<String> namingPatterns) {
+    public ExportConfiguration(List<ExportServerProfile> profiles, Properties namingPatterns) {
         this.profiles = profiles;
         this.namingPatterns = namingPatterns;
     }
@@ -162,16 +165,25 @@ public class ExportConfiguration {
         String line = null; int num = -1;
         int i = 0;
         System.out.println("Choose naming pattern (from naming.properties file):");
-        for (String p : this.namingPatterns){
-            i++;
-            System.out.println("[" + i + "] " + p);
+        List<String> keys = new ArrayList<>();
+        for (Object key : this.namingPatterns.keySet()){
+            try {
+                keys.add(key+"");
+            } catch (NumberFormatException e){
+                e.printStackTrace();
+            }
+        }
+                
+        Collections.sort(keys);
+                
+        for (String k : keys){
+            System.out.println("[" + k + "] " + this.namingPatterns.getProperty(k));
         }
         do {
             System.out.println("Your selection: ");
             line = System.console().readLine();
-            num = ExportUtils.convertString(line);
-        } while (num == -1 || num == 0 || num > i);
-        setActiveNamingPattern(this.namingPatterns.get(num-1));
+        } while (this.namingPatterns.getProperty(line) == null);
+        setActiveNamingPattern(this.namingPatterns.get(line)+"");
     }
     
     
