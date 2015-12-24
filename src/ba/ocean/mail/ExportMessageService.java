@@ -58,6 +58,7 @@ public class ExportMessageService {
         }
 
         serverFolder.open(Folder.READ_ONLY);
+        int numMessages = serverFolder.getMessageCount();
         
         // user must choose which email messages to download
         configuration.askForMessagesFilter(serverFolder.getName(), serverFolder);
@@ -78,7 +79,8 @@ public class ExportMessageService {
         
         // process every message in folder
         for (Message message : messages) {
-            System.out.println("Downloading message: " + message.getSubject());
+            System.out.println("Downloading message " + message.getMessageNumber() + "/" + numMessages
+                    + " : " + message.getSubject());
             
             File newFolder = null;
             try {
