@@ -61,4 +61,42 @@ public class ExportUtils {
         }
         return buffer.toString();
     }
+    
+    /**
+     * Gets only username parts of email address and converts to string
+     * @param address
+     * @return 
+     */
+    public static String addressUsernameToString(Address[] address){
+        if (address == null){
+            return "";
+        }
+        StringBuffer usernames = new StringBuffer();
+        String addString = addressToString(address);
+        String[] array = addString.split(" ");
+        for (int i=0; i<array.length; i++){
+            String[] addSplit = array[i].split("@");
+            usernames.append(addSplit[0]);
+        }
+        return usernames.toString();
+    }
+    
+    /**
+     * Gets only domain parts of email address and converts to string
+     * @param address
+     * @return 
+     */
+    public static String addressDomainToString(Address[] address){
+        if (address == null){
+            return "";
+        }
+        StringBuffer usernames = new StringBuffer();
+        String addString = addressToString(address);
+        String[] array = addString.split(" ");
+        for (int i=0; i<array.length; i++){
+            String[] addSplit = array[i].split("@");
+            usernames.append(addSplit[1]);
+        }
+        return usernames.toString();
+    }
 }

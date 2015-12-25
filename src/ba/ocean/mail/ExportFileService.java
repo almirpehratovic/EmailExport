@@ -352,9 +352,20 @@ public class ExportFileService {
         name = name.replace("{sDateSecond}", ExportUtils.convertDate(message.getSentDate(), "ss"));
 
         name = name.replace("{from}", ExportUtils.addressToString(message.getFrom()));
+        name = name.replace("{fromUsername}", ExportUtils.addressUsernameToString(message.getFrom()));
+        name = name.replace("{fromDomain}", ExportUtils.addressDomainToString(message.getFrom()));
+        
         name = name.replace("{to}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.TO)));
+        name = name.replace("{toUsername}", ExportUtils.addressUsernameToString(message.getRecipients(Message.RecipientType.TO)));
+        name = name.replace("{toDomain}", ExportUtils.addressDomainToString(message.getRecipients(Message.RecipientType.TO)));
+        
         name = name.replace("{cc}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.CC)));
+        name = name.replace("{ccUsername}", ExportUtils.addressUsernameToString(message.getRecipients(Message.RecipientType.CC)));
+        name = name.replace("{ccDomain}", ExportUtils.addressDomainToString(message.getRecipients(Message.RecipientType.CC)));
+                
         name = name.replace("{bcc}", ExportUtils.addressToString(message.getRecipients(Message.RecipientType.BCC)));
+        name = name.replace("{bccUsername}", ExportUtils.addressUsernameToString(message.getRecipients(Message.RecipientType.BCC)));
+        name = name.replace("{bccDomain}", ExportUtils.addressDomainToString(message.getRecipients(Message.RecipientType.BCC)));
 
         name = name.replace("{subject}", message.getSubject() == null ? "" : message.getSubject());
 
