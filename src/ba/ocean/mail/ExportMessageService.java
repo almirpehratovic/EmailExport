@@ -2,6 +2,7 @@ package ba.ocean.mail;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Properties;
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -18,10 +19,11 @@ import javax.mail.search.SentDateTerm;
 
 /**
  * Main class for downloading and parsing email messages
+ *
  * @author almir
  */
 public class ExportMessageService {
-    
+
     private ExportFileService fileService;
     private ExportConfiguration configuration;
 
@@ -29,27 +31,28 @@ public class ExportMessageService {
         this.fileService = fileService;
         this.configuration = configuration;
     }
-    
+
     /**
      * Responsible for downloading and parsing email messages
+     *
      * @param serverFoldername for example INBOX
      * @throws MessagingException
-     * @throws IOException 
+     * @throws IOException
      */
     public void downloadMessages() throws MessagingException, IOException {
         Properties props = new Properties();
-        
+
         // user must choose one of available profiles
         configuration.askForProfile();
-        
+
         // connect to email server
         Session session = Session.getInstance(props, new ExportAuthenticator());
         Store store = session.getStore(configuration.getActiveProfile().getProtocol());
         store.connect(configuration.getActiveProfile().getHost(), null, null);
-        
+
         // ask which folder to download
         configuration.askForFolder(store);
-        
+
         // read and open folder on email server
         Folder serverFolder = configuration.getFolder();
         if (serverFolder == null) {
@@ -59,33 +62,52 @@ public class ExportMessageService {
 
         serverFolder.open(Folder.READ_ONLY);
         int numMessages = serverFolder.getMessageCount();
-        
+
         // user must choose which email messages to download
         configuration.askForMessagesFilter(serverFolder.getName(), serverFolder);
         configuration.askForNamingPattern();
-        
+
         SearchTerm filter = null;
         
-        if (serverFolder.getName().toLowerCase().contains("sent")){
-            filter = new AndTerm(new SentDateTerm(ComparisonTerm.GE, configuration.getFirstDate()),
-                                     new SentDateTerm(ComparisonTerm.LE, configuration.getLastDate()));
+        Message[] messages = null;
+
+        if (configuration.getActiveProfile().isSupportedSearchTerms()) {
+            if (serverFolder.getName().toLowerCase().contains("sent")) {
+                filter = new AndTerm(new SentDateTerm(ComparisonTerm.GE, configuration.getFirstDate()),
+                        new SentDateTerm(ComparisonTerm.LE, configuration.getLastDate()));
+            } else {
+                filter = new AndTerm(new ReceivedDateTerm(ComparisonTerm.GE, configuration.getFirstDate()),
+                        new ReceivedDateTerm(ComparisonTerm.LE, configuration.getLastDate()));
+            }
+            messages = serverFolder.search(filter);
         } else {
-            filter = new AndTerm(new ReceivedDateTerm(ComparisonTerm.GE, configuration.getFirstDate()),
-                                     new ReceivedDateTerm(ComparisonTerm.LE, configuration.getLastDate()));
+            messages = serverFolder.getMessages();
         }
-        
-        
-        Message[] messages = serverFolder.search(filter);
-        
+
         // process every message in folder
         for (Message message : messages) {
+            
+            // if server does not support search terms (like Outlook in this moment, filter by client)
+            if (!configuration.getActiveProfile().isSupportedSearchTerms()){
+                if (serverFolder.getName().toLowerCase().contains("sent")) {
+                    if (message.getSentDate().before(configuration.getFirstDate()) || message.getSentDate().after(configuration.getLastDate())) {
+                        continue;
+                    }
+                } else {
+                    if (message.getReceivedDate().before(configuration.getFirstDate()) || message.getReceivedDate().after(configuration.getLastDate())) {
+                        continue;
+                    }
+                }     
+                
+            }
+            
             System.out.println("Downloading message " + message.getMessageNumber() + "/" + numMessages
                     + " : " + message.getSubject());
-            
+
             File newFolder = null;
             try {
                 newFolder = fileService.createMessageFolder(configuration.getActiveProfile(), message, configuration.getActiveNamingPattern());
-            } catch (IOException e){
+            } catch (IOException e) {
                 System.out.println("Skipping message because: " + e.getMessage());
                 continue;
             }
@@ -97,7 +119,7 @@ public class ExportMessageService {
             } else {
                 processMessagePart(message, newFolder);
             }
-            
+
             // write main output file (html) which prints message details
             fileService.createMessageFileFromTemplate(message, newFolder);
         }
@@ -111,19 +133,20 @@ public class ExportMessageService {
             processMessagePart(multipart.getBodyPart(i), folder);
         }
     }
-    
+
     /**
      * Parser of email message
+     *
      * @param part Email part
      * @param folder Folder in which app should create files
      * @throws MessagingException
-     * @throws IOException 
+     * @throws IOException
      */
     private void processMessagePart(Part part, File folder) throws MessagingException, IOException {
         String attachmentFilename = fileService.cleanFilename(part.getFileName());
         String disposition = part.getDisposition();
         String contentType = part.getContentType();
-        
+
         if (contentType.toLowerCase().startsWith("multipart/")) {
             processMessageMultipart((Multipart) part.getContent(), folder);
         } else if (attachmentFilename == null && (Part.ATTACHMENT.equalsIgnoreCase(disposition) || !contentType.equalsIgnoreCase("text/plain"))) {

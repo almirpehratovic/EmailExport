@@ -13,6 +13,8 @@ public class ExportServerProfile {
     private String host;
     // provider: imaps or pop3
     private String protocol;
+    // does server support search terms
+    private boolean supportedSearchTerms = true;
     
     public ExportServerProfile(){}
 
@@ -46,6 +48,16 @@ public class ExportServerProfile {
     public void setProtocol(String protocol) {
         this.protocol = protocol;
     }
+
+    public boolean isSupportedSearchTerms() {
+        return supportedSearchTerms;
+    }
+
+    public void setSupportedSearchTerms(boolean supportedSearchTerms) {
+        this.supportedSearchTerms = supportedSearchTerms;
+    }
+    
+    
     
     /**
      * Converts file configuration in .properties file to instance of this class
@@ -57,6 +69,11 @@ public class ExportServerProfile {
         configuration.setHost(props.getProperty("profile.host"));
         configuration.setProtocol(props.getProperty("profile.protocol"));
         configuration.setName(props.getProperty("profile.name"));
+        
+        String searchSupport = props.getProperty("profile.searcthtermsupport");
+        if (searchSupport.equalsIgnoreCase("no")){
+            configuration.setSupportedSearchTerms(false);
+        }
         return configuration;
     }
     

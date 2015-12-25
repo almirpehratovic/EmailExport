@@ -1,6 +1,6 @@
 # Email export console application
 ## About
-This is java console application for downloading email messages on a hard drive. Application is based on javax.mail library and in this moment enables downloading email messages from Gmail, Yahoo and Startlogic. To start application, please ensure that EmailExport.jar, profiles/ and template/ are contained on the same hierarchy level (as in this project), and type
+This is java console application for downloading email messages on a hard drive. Application is based on javax.mail library and in this moment enables downloading email messages from Gmail, Yahoo, Outlook and Startlogic. To start application, please ensure that EmailExport.jar, profiles/ and template/ are contained on the same hierarchy level (as in this project), and type
 
 ```java
 java -jar EmailExport.jar
