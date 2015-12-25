@@ -50,32 +50,32 @@ public class ExportUtils {
     }
 
     public static String addressToString(Address[] address) {
-        if (address == null){
+        if (address == null) {
             return "";
         }
-        StringBuffer buffer = new StringBuffer();
-        if (address != null) {
-            for (Address a : address) {
-                buffer.append(((InternetAddress) a).getAddress() + " ");
-            }
+        StringBuilder buffer = new StringBuilder();
+
+        for (Address a : address) {
+            buffer.append(((InternetAddress) a).getAddress() + " ");
         }
         return buffer.toString();
     }
-    
+
     /**
      * Gets only username parts of email address and converts to string
+     *
      * @param address
-     * @return 
+     * @return
      */
-    public static String addressUsernameToString(Address[] address){
-        if (address == null){
+    public static String addressUsernameToString(Address[] address) {
+        if (address == null) {
             return "";
         }
-        StringBuffer usernames = new StringBuffer();
+        StringBuilder usernames = new StringBuilder();
         String addString = addressToString(address);
         String[] array = addString.split(" ");
-        for (int i=0; i<array.length; i++){
-            if (array[i].contains("@")){
+        for (int i = 0; i < array.length; i++) {
+            if (array[i].contains("@")) {
                 String[] addSplit = array[i].split("@");
                 usernames.append(addSplit[0]);
             } else {
@@ -84,21 +84,22 @@ public class ExportUtils {
         }
         return usernames.toString();
     }
-    
+
     /**
      * Gets only domain parts of email address and converts to string
+     *
      * @param address
-     * @return 
+     * @return
      */
-    public static String addressDomainToString(Address[] address){
-        if (address == null){
+    public static String addressDomainToString(Address[] address) {
+        if (address == null) {
             return "";
         }
-        StringBuffer usernames = new StringBuffer();
+        StringBuilder usernames = new StringBuilder();
         String addString = addressToString(address);
         String[] array = addString.split(" ");
-        for (int i=0; i<array.length; i++){
-            if (array[i].contains("@")){
+        for (int i = 0; i < array.length; i++) {
+            if (array[i].contains("@")) {
                 String[] addSplit = array[i].split("@");
                 usernames.append(addSplit[1]);
             } else {
