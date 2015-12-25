@@ -75,8 +75,12 @@ public class ExportUtils {
         String addString = addressToString(address);
         String[] array = addString.split(" ");
         for (int i=0; i<array.length; i++){
-            String[] addSplit = array[i].split("@");
-            usernames.append(addSplit[0]);
+            if (array[i].contains("@")){
+                String[] addSplit = array[i].split("@");
+                usernames.append(addSplit[0]);
+            } else {
+                usernames.append(array[i]);
+            }
         }
         return usernames.toString();
     }
@@ -94,8 +98,12 @@ public class ExportUtils {
         String addString = addressToString(address);
         String[] array = addString.split(" ");
         for (int i=0; i<array.length; i++){
-            String[] addSplit = array[i].split("@");
-            usernames.append(addSplit[1]);
+            if (array[i].contains("@")){
+                String[] addSplit = array[i].split("@");
+                usernames.append(addSplit[1]);
+            } else {
+                usernames.append("unknown-domain");
+            }
         }
         return usernames.toString();
     }
