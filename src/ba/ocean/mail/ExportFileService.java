@@ -109,14 +109,18 @@ public class ExportFileService {
     public File createAttachment(InputStream in, File folder, String filename) throws IOException {
         filename = filename.replace(" ", "");
         File file = new File(folder, cleanFilename(filename));
+        
         OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-
-        int b;
-        while ((b = in.read()) != -1) {
-            out.write(b);
+        try {
+            int b;
+            while ((b = in.read()) != -1) {
+                out.write(b);
+            }
+        } catch (IOException e){
+            
         }
+        
         out.flush();
-
         out.close();
         in.close();
 
