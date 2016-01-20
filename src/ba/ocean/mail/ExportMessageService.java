@@ -1,6 +1,7 @@
 package ba.ocean.mail;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Properties;
@@ -66,9 +67,10 @@ public class ExportMessageService {
         // user must choose which email messages to download
         configuration.askForMessagesFilter(serverFolder.getName(), serverFolder);
         configuration.askForNamingPattern();
+        configuration.askForOutputFormat();
 
         SearchTerm filter = null;
-        
+
         Message[] messages = null;
 
         if (configuration.getActiveProfile().isSupportedSearchTerms()) {
@@ -86,9 +88,9 @@ public class ExportMessageService {
 
         // process every message in folder
         for (Message message : messages) {
-            
+
             // if server does not support search terms (like Outlook in this moment, filter by client)
-            if (!configuration.getActiveProfile().isSupportedSearchTerms()){
+            if (!configuration.getActiveProfile().isSupportedSearchTerms()) {
                 if (serverFolder.getName().toLowerCase().contains("sent")) {
                     if (message.getSentDate().before(configuration.getFirstDate()) || message.getSentDate().after(configuration.getLastDate())) {
                         continue;
@@ -97,31 +99,42 @@ public class ExportMessageService {
                     if (message.getReceivedDate().before(configuration.getFirstDate()) || message.getReceivedDate().after(configuration.getLastDate())) {
                         continue;
                     }
-                }     
-                
+                }
+
             }
-            
+
             System.out.println("Downloading message " + message.getMessageNumber() + "/" + numMessages
                     + " : " + message.getSubject());
 
-            File newFolder = null;
-            try {
-                newFolder = fileService.createMessageFolder(configuration.getActiveProfile(), message, configuration.getActiveNamingPattern());
-            } catch (IOException e) {
-                System.out.println("Skipping message because: " + e.getMessage());
-                continue;
+            if (configuration.getFormat().equals("html")) {
+                File newFolder = null;
+                try {
+                    newFolder = fileService.createMessageFolder(configuration.getActiveProfile(), message, configuration.getActiveNamingPattern());
+                } catch (IOException e) {
+                    System.out.println("Skipping message because: " + e.getMessage());
+                    continue;
+                }
+
+                Object messageBody = message.getContent();
+
+                if (messageBody instanceof Multipart) {
+                    processMessageMultipart((Multipart) messageBody, newFolder);
+                } else {
+                    processMessagePart(message, newFolder);
+                }
+
+                // write main output file (html) which prints message details
+                fileService.createMessageFileFromTemplate(message, newFolder);
+                
+            } else { // .eml file
+                File newFile = null;
+                try {
+                    newFile = fileService.createEml(configuration.getActiveProfile(), message, configuration.getActiveNamingPattern());
+                } catch (IOException e) {
+                    System.out.println("Skipping message because: " + e.getMessage());
+                    continue;
+                }
             }
-
-            Object messageBody = message.getContent();
-
-            if (messageBody instanceof Multipart) {
-                processMessageMultipart((Multipart) messageBody, newFolder);
-            } else {
-                processMessagePart(message, newFolder);
-            }
-
-            // write main output file (html) which prints message details
-            fileService.createMessageFileFromTemplate(message, newFolder);
         }
 
         serverFolder.close(false);

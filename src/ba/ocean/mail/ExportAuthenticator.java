@@ -16,9 +16,9 @@ public class ExportAuthenticator extends Authenticator {
     @Override
     protected PasswordAuthentication getPasswordAuthentication() {
         if (System.console() != null) {
-            System.out.println("Please enter your username:");
+            System.out.print("Please enter your username:");
             String username = System.console().readLine();
-            System.out.println("Please enter your password:");
+            System.out.print("Please enter your password:");
             char[] password = System.console().readPassword();
             return new PasswordAuthentication(username, new String(password));
         }

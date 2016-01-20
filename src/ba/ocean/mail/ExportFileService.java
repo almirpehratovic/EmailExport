@@ -96,6 +96,49 @@ public class ExportFileService {
         }
         return messageFolder;
     }
+    
+    /**
+     * Creates .eml file for one email message
+     *
+     * @param message Email message
+     * @return created file
+     * @throws IOException
+     * @throws MessagingException
+     */
+    public File createEml(ExportServerProfile profile, Message message, String namingPattern) throws IOException, MessagingException {
+        // create folder for server folder name, for example inbox
+        File folder = new File(outputFolder, cleanFilename(profile.getName()));
+
+        if (!folder.exists()) {
+            folder.mkdir();
+        }
+
+        folder = new File(folder, cleanFilename(message.getFolder().getName()));
+
+        if (!folder.exists()) {
+            folder.mkdir();
+        }
+
+        // create name of the folder according to naming rules
+        String name = createNameFromPattern(message, namingPattern);
+
+        if (name == null || name.length() == 0) {
+            name = "Message " + message.getMessageNumber();
+        }
+
+        name = cleanFilename(name.substring(0, name.length() > 200 ? 200 : name.length()));
+
+        File messageFile = new File(folder, name + ".eml");
+        if (messageFile.exists()) {
+            throw new IOException("File with name " + name + " already exists.");
+        } else {
+           FileOutputStream fos = new FileOutputStream(messageFile);
+           message.writeTo(fos);
+           fos.flush();
+           fos.close();
+        }
+        return messageFile;
+    }
 
     /**
      * Creates email attachment file

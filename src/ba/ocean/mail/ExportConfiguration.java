@@ -32,6 +32,8 @@ public class ExportConfiguration {
     private Properties namingPatterns = new Properties();
     // chosen naming pattern
     private String activeNamingPattern;
+    // which format to save (html or eml)
+    private String format;
 
     public ExportConfiguration(List<ExportServerProfile> profiles, Properties namingPatterns) {
         this.profiles = profiles;
@@ -89,6 +91,16 @@ public class ExportConfiguration {
     public void setActiveNamingPattern(String namingPattern) {
         this.activeNamingPattern = namingPattern;
     }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+    
+    
     
     
     /**
@@ -103,7 +115,7 @@ public class ExportConfiguration {
             System.out.println("[" + i + "] " + profile.getName());
         }
         do {
-            System.out.println("Your selection: ");
+            System.out.print("Your selection:");
             line = System.console().readLine();
             num = ExportUtils.convertString(line);
         } while (num == -1 || num == 0 || num > i);
@@ -127,14 +139,14 @@ public class ExportConfiguration {
         String line = null; Date date = null; String datePattern = "yyyy/MM/dd";
         
         do {
-            System.out.println("Please enter first date (" + datePattern + ") to download:");
+            System.out.print("Please enter first date (" + datePattern + ") to download:");
             line = System.console().readLine();
             date = ExportUtils.convertString(line, datePattern);
         } while (date == null);
         setFirstDate(date);
         
         do {
-            System.out.println("Please enter last date (" + datePattern + ") to download:");
+            System.out.print("Please enter last date (" + datePattern + ") to download:");
             line = System.console().readLine();
             date = ExportUtils.convertString(line, datePattern);
         } while (date == null || date.compareTo(this.firstDate) < 0);
@@ -154,7 +166,7 @@ public class ExportConfiguration {
             System.out.println("[" + i + "] " + folder.getName());
         }
         do {
-            System.out.println("Your selection: ");
+            System.out.print("Your selection:");
             line = System.console().readLine();
             num = ExportUtils.convertString(line);
         } while (num == -1 || num == 0 || num > i);
@@ -180,10 +192,27 @@ public class ExportConfiguration {
             System.out.println("[" + k + "] " + this.namingPatterns.getProperty(k));
         }
         do {
-            System.out.println("Your selection: ");
+            System.out.print("Your selection: ");
             line = System.console().readLine();
         } while (this.namingPatterns.getProperty(line) == null);
         setActiveNamingPattern(this.namingPatterns.get(line)+"");
+    }
+    
+    /**
+     * Asks user to choose one profile from the list of available profiles
+     */
+    public void askForOutputFormat(){
+        String line = null; int num = -1;
+        int i = 0;
+        System.out.println("Choose output format:");
+        System.out.println("[1] html");
+        System.out.println("[2] eml");
+        do {
+            System.out.print("Your selection:");
+            line = System.console().readLine();
+            num = ExportUtils.convertString(line);
+        } while (num > 2 || num < 1);
+        setFormat(num == 1 ? "html" : "eml");
     }
     
     
