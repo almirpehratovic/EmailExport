@@ -8,12 +8,21 @@ java -jar EmailExport.jar
 
 After this command, application will asks questions about username, password, folder etc. If you want to configure naming patterns of downloaded messages, please see template/naming.properties file.
 
+On Linux systems we can edit download.sh script, populate username, password and other choices, and start it from command line:
+
+```java
+sudo apt-get install expect
+chmod 755 download.sh
+./download.sh
+```
+
+
 ## List of implemented features
 
 * Configuring email servers as profiles in .properties files
 * Reading list of folders on server (inbox, sent, ...)
 * For downloading email messages from Gmail security needs to be adjusted temporarily (Turn on on this [link](https://www.google.com/settings/security/lesssecureapps))
-* Every message is downloaded as a folder which contains main message file and all attachments
+* Every message is downloaded as a folder which contains main message file and all attachments or in .eml format
 * Output file for email message is velocity template (html)
 * User can configure naming patterns in naming.properties
 * Messages are downloading for the range of dates
